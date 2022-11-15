@@ -27,8 +27,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _ASTAR_PLANNER_HEAP_H_
-#define _ASTAR_PLANNER_HEAP_H_
+#pragma once
+
+#include <string>
 
 #include "astar_planner/utils.h"
 
@@ -36,75 +37,63 @@
 #define HEAPSIZE 20000000
 #define HEAPSIZE_INIT 5000
 
-namespace astar_planner
-{
-class SBPL_Exception : public std::runtime_error
-{
-public:
-  explicit SBPL_Exception(const std::string& what_arg = "SBPL has encountered a fatal error!")
-    : std::runtime_error(what_arg)
-  {
+namespace astar_planner {
+class SBPL_Exception : public std::runtime_error {
+ public:
+  explicit SBPL_Exception(
+      const std::string& what_arg = "SBPL has encountered a fatal error!")
+      : std::runtime_error(what_arg) {
     printf("%s\n", what_arg.c_str());
   }
 
-  explicit SBPL_Exception(const char* what_arg) : std::runtime_error(what_arg)
-  {
+  explicit SBPL_Exception(const char* what_arg) : std::runtime_error(what_arg) {
     printf("%s\n", what_arg);
   }
 
-  virtual ~SBPL_Exception() throw()
-  {
-  }
+  virtual ~SBPL_Exception() throw() {}
 
-private:
+ private:
 };
 
 /**
  * \brief base class for a search state
  */
-class AbstractSearchState
-{
-public:
+class AbstractSearchState {
+ public:
   /**
-   * \brief index of the state in the heap, typically used for membership in OPEN
+   * \brief index of the state in the heap, typically used for membership in
+   * OPEN
    */
   int heapindex;
 
-public:
-  AbstractSearchState()
-  {
-    heapindex = 0;
-  }
-  virtual ~AbstractSearchState()
-  {
-  }
+ public:
+  AbstractSearchState() { heapindex = 0; }
+  virtual ~AbstractSearchState() {}
 };
 
-struct HEAPINTELEMENT
-{
+struct HEAPINTELEMENT {
   AbstractSearchState* heapstate;
   int key;
 };
 
 typedef struct HEAPINTELEMENT heapintelement;
 
-class CIntHeap
-{
+class CIntHeap {
   // data
-public:
+ public:
   int percolates;  // for counting purposes
   heapintelement* heap;
   int currentsize;
   int allocated;
 
   // constructors
-public:
+ public:
   CIntHeap();
-  CIntHeap(int initial_size);
+  explicit CIntHeap(int initial_size);
   ~CIntHeap();
 
   // functions
-public:
+ public:
   bool emptyheap();
   bool fullheap();
   bool inheap(AbstractSearchState* AbstractSearchState);
@@ -114,12 +103,12 @@ public:
   void deleteheap(AbstractSearchState* AbstractSearchState);
   void updateheap(AbstractSearchState* AbstractSearchState, int NewKey);
   AbstractSearchState* getminheap();
-  AbstractSearchState* getminheap(int& ReturnKey);
+  AbstractSearchState* getminheap(int* ReturnKey);
   int getminkeyheap();
   AbstractSearchState* deleteminheap();
   void makeheap();
 
-private:
+ private:
   void percolatedown(int hole, heapintelement tmp);
   void percolateup(int hole, heapintelement tmp);
   void percolateupordown(int hole, heapintelement tmp);
@@ -129,5 +118,3 @@ private:
 };
 
 }  // namespace astar_planner
-
-#endif  // _ASTAR_PLANNER_HEAP_H_

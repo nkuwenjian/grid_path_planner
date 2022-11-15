@@ -5,7 +5,9 @@ set(CMAKE_BUILD_TYPE Release)
 message(STATUS "BUILD TYPE: " ${CMAKE_BUILD_TYPE})
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -23,13 +25,13 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES astar_planner
-  CATKIN_DEPENDS 
-    costmap_2d 
-    geometry_msgs 
-    nav_core 
-    nav_msgs 
-    pluginlib 
-    roscpp 
+  CATKIN_DEPENDS
+    costmap_2d
+    geometry_msgs
+    nav_core
+    nav_msgs
+    pluginlib
+    roscpp
     tf2_ros
 )
 

@@ -1,12 +1,43 @@
-#include <algorithm>
-#include <chrono>
+/******************************************************************************
+ * Copyright (c) 2022, NKU Mobile & Flying Robotics Lab
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *****************************************************************************/
+
 #include "astar_planner/astar_planner.h"
 
-namespace astar_planner
-{
-//---------------------initialization and destruction routines--------------------------------------------------------
-SBPL2DGridSearch::SBPL2DGridSearch(int width_x, int height_y, float cellsize_m)
-{
+#include <algorithm>
+#include <chrono>  // NOLINT
+
+namespace astar_planner {
+
+SBPL2DGridSearch::SBPL2DGridSearch(int width_x, int height_y,
+                                   float cellsize_m) {
   iteration_ = 0;
   searchStates2D_ = NULL;
 
@@ -26,28 +57,23 @@ SBPL2DGridSearch::SBPL2DGridSearch(int width_x, int height_y, float cellsize_m)
 
   // allocate memory
   OPEN2D_ = new CIntHeap(width_x * height_y);
-  if (!createSearchStates2D())
-  {
+  if (!createSearchStates2D()) {
     throw SBPL_Exception("ERROR: failed to create searchstatespace2D");
   }
 }
 
-bool SBPL2DGridSearch::createSearchStates2D(void)
-{
+bool SBPL2DGridSearch::createSearchStates2D(void) {
   int x, y;
 
-  if (searchStates2D_ != NULL)
-  {
+  if (searchStates2D_ != NULL) {
     printf("ERROR: We already have a non-NULL search states array\n");
     return false;
   }
 
   searchStates2D_ = new SBPL_2DGridSearchState*[width_];
-  for (x = 0; x < width_; x++)
-  {
+  for (x = 0; x < width_; x++) {
     searchStates2D_[x] = new SBPL_2DGridSearchState[height_];
-    for (y = 0; y < height_; y++)
-    {
+    for (y = 0; y < height_; y++) {
       searchStates2D_[x][y].iterationaccessed = iteration_;
       searchStates2D_[x][y].x = x;
       searchStates2D_[x][y].y = y;
@@ -57,29 +83,25 @@ bool SBPL2DGridSearch::createSearchStates2D(void)
   return true;
 }
 
-inline void SBPL2DGridSearch::initializeSearchState2D(SBPL_2DGridSearchState* state2D)
-{
+inline void SBPL2DGridSearch::initializeSearchState2D(
+    SBPL_2DGridSearchState* state2D) {
   state2D->g = INFINITECOST;
   state2D->heapindex = 0;
   state2D->iterationaccessed = iteration_;
   state2D->predecessor = NULL;
 }
 
-void SBPL2DGridSearch::destroy()
-{
+void SBPL2DGridSearch::destroy() {
   // destroy the OPEN list:
-  if (OPEN2D_ != NULL)
-  {
+  if (OPEN2D_ != NULL) {
     OPEN2D_->makeemptyheap();
     delete OPEN2D_;
     OPEN2D_ = NULL;
   }
 
   // destroy the 2D states:
-  if (searchStates2D_ != NULL)
-  {
-    for (int x = 0; x < width_; x++)
-    {
+  if (searchStates2D_ != NULL) {
+    for (int x = 0; x < width_; x++) {
       delete[] searchStates2D_[x];
     }
     delete[] searchStates2D_;
@@ -87,8 +109,7 @@ void SBPL2DGridSearch::destroy()
   }
 }
 
-void SBPL2DGridSearch::computedxy()
-{
+void SBPL2DGridSearch::computedxy() {
   // initialize some constants for 2D search
   dx_[0] = 1;
   dy_[0] = 1;
@@ -108,28 +129,28 @@ void SBPL2DGridSearch::computedxy()
   dy_[7] = -1;
 
   // compute distances
-  for (int dind = 0; dind < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dind++)
-  {
-    if (dx_[dind] != 0 && dy_[dind] != 0)
-      dxy_distance_mm_[dind] = (int)(cellSize_m_ * 1414);
-    else
-      dxy_distance_mm_[dind] = (int)(cellSize_m_ * 1000);  // the cost of a horizontal move in millimeters
+  for (int dind = 0; dind < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dind++) {
+    if (dx_[dind] != 0 && dy_[dind] != 0) {
+      dxy_distance_mm_[dind] = static_cast<int>(cellSize_m_ * 1414);
+    } else {
+      // the cost of a horizontal move in millimeters
+      dxy_distance_mm_[dind] = static_cast<int>(cellSize_m_ * 1000);
+    }
   }
 }
 
-//--------------------------------------------------------------------------------------------------------------------
-
-//-----------------------------------------main functions--------------------------------------------------------------
-
-bool SBPL2DGridSearch::search(unsigned char* Grid2D, unsigned char obsthresh, int startx_c, int starty_c, int goalx_c,
-                              int goaly_c, std::vector<std::pair<int, int> >& path)
-{
-  return SBPL2DGridSearch::search_withheap(Grid2D, obsthresh, startx_c, starty_c, goalx_c, goaly_c, path);
+bool SBPL2DGridSearch::search(unsigned char* Grid2D, unsigned char obsthresh,
+                              int startx_c, int starty_c, int goalx_c,
+                              int goaly_c,
+                              std::vector<std::pair<int, int>>* path) {
+  return SBPL2DGridSearch::search_withheap(Grid2D, obsthresh, startx_c,
+                                           starty_c, goalx_c, goaly_c, path);
 }
 
-bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obsthresh, int startx_c, int starty_c,
-                                       int goalx_c, int goaly_c, std::vector<std::pair<int, int> >& path)
-{
+bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D,
+                                       unsigned char obsthresh, int startx_c,
+                                       int starty_c, int goalx_c, int goaly_c,
+                                       std::vector<std::pair<int, int>>* path) {
   SBPL_2DGridSearchState* searchExpState = NULL;
   SBPL_2DGridSearchState* searchPredState = NULL;
   int numofExpands = 0;
@@ -151,10 +172,11 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
   OPEN2D_->makeemptyheap();
 
   // check the validity of start/goal
-  if (!withinMap(startx_c, starty_c) || !withinMap(goalx_c, goaly_c))
-  {
-    printf("ERROR: grid2Dsearch is called on invalid start (%d %d) or goal(%d %d)\n", startx_c, starty_c, goalx_c,
-           goaly_c);
+  if (!withinMap(startx_c, starty_c) || !withinMap(goalx_c, goaly_c)) {
+    printf(
+        "ERROR: grid2Dsearch is called on invalid start (%d %d) or goal(%d "
+        "%d)\n",
+        startx_c, starty_c, goalx_c, goaly_c);
     return false;
   }
 
@@ -162,7 +184,8 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
   searchExpState = &searchStates2D_[startX_][startY_];
   initializeSearchState2D(searchExpState);
   initializeSearchState2D(&searchStates2D_[goalx_c][goaly_c]);
-  SBPL_2DGridSearchState* search2DGoalState = &searchStates2D_[goalx_c][goaly_c];
+  SBPL_2DGridSearchState* search2DGoalState =
+      &searchStates2D_[goalx_c][goaly_c];
 
   // seed the search
   searchExpState->g = 0;
@@ -170,13 +193,14 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
 
   OPEN2D_->insertheap(searchExpState, key);
 
-  char* pbClosed = (char*)calloc(1, width_ * height_);
+  char* pbClosed = reinterpret_cast<char*>(calloc(1, width_ * height_));
 
   // the main repetition of expansions
-  while (!OPEN2D_->emptyheap() && __min(INFINITECOST, search2DGoalState->g) > OPEN2D_->getminkeyheap())
-  {
+  while (!OPEN2D_->emptyheap() &&
+         __min(INFINITECOST, search2DGoalState->g) > OPEN2D_->getminkeyheap()) {
     // get the next state for expansion
-    searchExpState = dynamic_cast<SBPL_2DGridSearchState*>(OPEN2D_->deleteminheap());
+    searchExpState =
+        dynamic_cast<SBPL_2DGridSearchState*>(OPEN2D_->deleteminheap());
     numofExpands++;
 
     int exp_x = searchExpState->x;
@@ -187,23 +211,25 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
 
     // iterate over successors
     int expcost = getCost(Grid2D, exp_x, exp_y);
-    for (int dir = 0; dir < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dir++)
-    {
+    for (int dir = 0; dir < SBPL_2DGRIDSEARCH_NUMOF2DDIRS; dir++) {
       int newx = exp_x + dx_[dir];
       int newy = exp_y + dy_[dir];
 
       // make sure it is inside the map and has no obstacle
-      if (!withinMap(newx, newy))
+      if (!withinMap(newx, newy)) {
         continue;
-
-      if (pbClosed[newx + width_ * newy] == 1)
+      }
+      if (pbClosed[newx + width_ * newy] == 1) {
         continue;
+      }
 
       // compute the cost
       int mapcost = __max(getCost(Grid2D, newx, newy), expcost);
 
-      if (mapcost >= obsthresh)  // obstacle encountered
+      // obstacle encountered
+      if (mapcost >= obsthresh) {
         continue;
+      }
       // int cost = (mapcost + 1) * dxy_distance_mm_[dir];
       int cost = dxy_distance_mm_[dir];
 
@@ -211,27 +237,29 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
       searchPredState = &searchStates2D_[newx][newy];
 
       // update predecessor if necessary
-      if (searchPredState->iterationaccessed != iteration_ || searchPredState->g > cost + searchExpState->g)
-      {
+      if (searchPredState->iterationaccessed != iteration_ ||
+          searchPredState->g > cost + searchExpState->g) {
         searchPredState->iterationaccessed = iteration_;
         searchPredState->g = __min(INFINITECOST, cost + searchExpState->g);
-        key = searchPredState->g + SBPL_2DGRIDSEARCH_HEUR2D(searchPredState->x, searchPredState->y);
+        key = searchPredState->g +
+              SBPL_2DGRIDSEARCH_HEUR2D(searchPredState->x, searchPredState->y);
 
-        if (searchPredState->heapindex == 0)
+        if (searchPredState->heapindex == 0) {
           OPEN2D_->insertheap(searchPredState, key);
-        else
+        } else {
           OPEN2D_->updateheap(searchPredState, key);
-
+        }
         searchPredState->predecessor = searchExpState;
       }
     }  // over successors
   }    // while
 
   // set lower bounds for the remaining states
-  if (!OPEN2D_->emptyheap())
+  if (!OPEN2D_->emptyheap()) {
     largestcomputedoptf_ = OPEN2D_->getminkeyheap();
-  else
+  } else {
     largestcomputedoptf_ = INFINITECOST;
+  }
 
   free(pbClosed);
 
@@ -241,19 +269,19 @@ bool SBPL2DGridSearch::search_withheap(unsigned char* Grid2D, unsigned char obst
   printf(
       "# of expands during 2dgridsearch=%d time=%.2f msecs 2Dsolcost_inmm=%d "
       "largestoptfval=%d (start=%d %d goal=%d %d)\n",
-      numofExpands, timediff.count() * 1000, searchStates2D_[goalx_c][goaly_c].g, largestcomputedoptf_, startx_c,
+      numofExpands, timediff.count() * 1000,
+      searchStates2D_[goalx_c][goaly_c].g, largestcomputedoptf_, startx_c,
       starty_c, goalx_c, goaly_c);
 
-  path.clear();
+  path->clear();
   searchPredState = search2DGoalState;
-  path.push_back(std::make_pair(searchPredState->x, searchPredState->y));
-  while (searchPredState->predecessor != NULL)
-  {
+  path->emplace_back(searchPredState->x, searchPredState->y);
+  while (searchPredState->predecessor != NULL) {
     searchPredState = searchPredState->predecessor;
-    path.push_back(std::make_pair(searchPredState->x, searchPredState->y));
+    path->emplace_back(searchPredState->x, searchPredState->y);
   }
 
-  std::reverse(path.begin(), path.end());
+  std::reverse(path->begin(), path->end());
 
   return true;
 }
