@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2022, NKU Mobile & Flying Robotics Lab
+ * Copyright (c) 2023, NKU Mobile & Flying Robotics Lab
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,20 +27,26 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
 #pragma once
 
-#include <stdexcept>
-#include <string>
+namespace astar_planner_ros {
 
-#ifndef WIN32
-#define __max(x, y) (x > y ? x : y)
-#define __min(x, y) (x > y ? y : x)
-#endif
+enum class NodeStatus { OPEN, CLOSED };
 
-#define CONTXY2DISC(X, CELLSIZE)                     \
-  (((X) >= 0) ? (static_cast<int>((X) / (CELLSIZE))) \
-              : (static_cast<int>((X) / (CELLSIZE)) - 1))
-#define DISCXY2CONT(X, CELLSIZE) ((X) * (CELLSIZE) + (CELLSIZE) / 2.0)
-#define INFINITECOST 1000000000
+class Node {
+ public:
+  Node() = default;
+  virtual ~Node() = default;
+
+  int heap_index() const { return heap_index_; }
+  void set_heap_index(const int heap_index) { heap_index_ = heap_index; }
+
+ protected:
+  int heap_index_ = 0;
+};
+
+}  // namespace astar_planner_ros

@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>astar_planner</name>
+  <name>astar_planner_ros</name>
   <version>0.0.0</version>
-  <description>The astar_planner package</description>
+  <description>The grid A-star ros package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="jwen@todo.todo">jwen</maintainer>
+  <maintainer email="nkuwenjian@gmail.com">Jian Wen</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
@@ -19,7 +19,7 @@
   <!-- Url tags are optional, but multiple are allowed, one per tag -->
   <!-- Optional attribute type can be: website, bugtracker, or repository -->
   <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/astar_planner</url> -->
+  <!-- <url type="website">http://wiki.ros.org/astar_planner_ros</url> -->
 
 
   <!-- Author tags are optional, multiple are allowed, one per tag -->

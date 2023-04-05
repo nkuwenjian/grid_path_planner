@@ -1,5 +1,5 @@
-<library path="lib/libastar_planner">
-  <class name="astar_planner/AStarPlannerROS" type="astar_planner::AStarPlannerROS" base_class_type="nav_core::BaseGlobalPlanner">
+<library path="lib/libastar_planner_ros">
+  <class name="astar_planner_ros/AStarPlannerROS" type="astar_planner_ros::AStarPlannerROS" base_class_type="nav_core::BaseGlobalPlanner">
     <description>
       An implementation of grid-based A-star planner.
     </description>

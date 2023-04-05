@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright (c) 2022, NKU Mobile & Flying Robotics Lab
+ * Copyright (c) 2023, NKU Mobile & Flying Robotics Lab
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,6 +27,8 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
 #pragma once
@@ -40,9 +42,10 @@
 #include "nav_core/base_global_planner.h"
 #include "ros/ros.h"
 
-#include "astar_planner/astar_planner.h"
+#include "astar_planner_ros/astar_planner.h"
 
-namespace astar_planner {
+namespace astar_planner_ros {
+
 class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
  public:
   /**
@@ -55,7 +58,8 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
    * @param  name The name of this planner
    * @param  costmap_ros A pointer to the ROS wrapper of the costmap to use
    */
-  AStarPlannerROS(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
+  AStarPlannerROS(const std::string& name,
+                  costmap_2d::Costmap2DROS* costmap_ros);
 
   /**
    * @brief  Initialization function for the AStarPlannerROS object
@@ -76,14 +80,15 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
                 const geometry_msgs::PoseStamped& goal,
                 std::vector<geometry_msgs::PoseStamped>& plan) override;
 
-  virtual ~AStarPlannerROS() = default;
+  ~AStarPlannerROS() override = default;
 
  private:
-  unsigned char computeCircumscribedCost();
-  void publishGlobalPlan(const std::vector<geometry_msgs::PoseStamped>& plan);
+  uint8_t ComputeCircumscribedCost() const;
+  void PublishGlobalPlan(
+      const std::vector<geometry_msgs::PoseStamped>& plan) const;
 
  private:
-  std::unique_ptr<SBPL2DGridSearch> astar_planner_ = nullptr;
+  std::unique_ptr<GridSearch> astar_planner_ = nullptr;
   bool initialized_ = false;
 
   std::string name_;
@@ -93,4 +98,4 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
   ros::Publisher plan_pub_;
 };
 
-}  // namespace astar_planner
+}  // namespace astar_planner_ros

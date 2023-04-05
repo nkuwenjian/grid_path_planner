@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(astar_planner)
+project(astar_planner_ros)
 
 set(CMAKE_BUILD_TYPE Release)
 message(STATUS "BUILD TYPE: " ${CMAKE_BUILD_TYPE})
@@ -22,9 +22,11 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
 )
 
+find_package(glog REQUIRED)
+
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES astar_planner
+  LIBRARIES astar_planner_ros
   CATKIN_DEPENDS
     costmap_2d
     geometry_msgs
@@ -40,5 +42,8 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(${PROJECT_NAME} src/astar_planner_ros.cpp src/astar_planner.cpp src/heap.cpp)
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+add_library(astar_planner src/astar_planner.cpp src/heap.cpp)
+target_link_libraries(astar_planner ${catkin_LIBRARIES} glog::glog)
+
+add_library(astar_planner_ros src/astar_planner_ros.cpp)
+target_link_libraries(astar_planner_ros astar_planner ${catkin_LIBRARIES})
