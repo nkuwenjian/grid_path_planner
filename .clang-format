@@ -29,8 +29,8 @@ IncludeCategories:
   # Protobuf Files
   - Regex:       '\.pb\.h'
     Priority:    6
-  # Apollo libs
-  - Regex:       '^"(astar_planner)'
+  # A-star ros planner libs
+  - Regex:       '^"(astar_planner_ros)'
     Priority:    7
   # The rest
   - Regex:       '.*'
