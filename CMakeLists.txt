@@ -43,7 +43,10 @@ include_directories(
 )
 
 add_library(astar_planner src/astar_planner.cpp src/heap.cpp)
-target_link_libraries(astar_planner ${catkin_LIBRARIES} glog::glog)
+target_link_libraries(astar_planner glog::glog)
+
+add_executable(astar_planner_test src/astar_planner_test.cpp)
+target_link_libraries(astar_planner_test astar_planner ${catkin_LIBRARIES})
 
 add_library(astar_planner_ros src/astar_planner_ros.cpp)
 target_link_libraries(astar_planner_ros astar_planner ${catkin_LIBRARIES})

@@ -68,6 +68,7 @@ class GridSearch {
   void ComputeGridSearchActions();
   int GetActionCost(int curr_x, int curr_y, int action_id) const;
   void LoadGridAStarResult(GridAStarResult* result) const;
+  void ClearDpMap();
 
  private:
   int max_grid_x_ = 0;

@@ -88,6 +88,7 @@ bool GridSearch::GenerateGridPath(const int sx, const int sy, const int ex,
 
   // clean up heap elements
   open_list_->Clear();
+  ClearDpMap();
   // create start node
   Node2d* start_node = &dp_lookup_table_[sx][sy];
   start_node->set_g(0);
@@ -190,7 +191,6 @@ int GridSearch::GetIndex(const int x, const int y) const {
 int GridSearch::GetActionCost(const int curr_x, const int curr_y,
                               const int action_id) const {
   CHECK(IsValidCell(curr_x, curr_y));
-
   const int succ_x = curr_x + dx_[action_id];
   const int succ_y = curr_y + dy_[action_id];
   CHECK(IsValidCell(succ_x, succ_y));
@@ -354,7 +354,19 @@ void GridSearch::LoadGridAStarResult(GridAStarResult* result) const {
 }
 
 int GridSearch::CheckDpMap(const int grid_x, const int grid_y) {
+  CHECK(IsWithinMap(grid_x, grid_y));
   return dp_lookup_table_[grid_x][grid_y].g();
+}
+
+void GridSearch::ClearDpMap() {
+  for (int grid_x = 0; grid_x < max_grid_x_; ++grid_x) {
+    for (int grid_y = 0; grid_y < max_grid_y_; ++grid_y) {
+      dp_lookup_table_[grid_x][grid_y].set_h(0.0);
+      dp_lookup_table_[grid_x][grid_y].set_g(kInfiniteCost);
+      dp_lookup_table_[grid_x][grid_y].set_pre_node(nullptr);
+      dp_lookup_table_[grid_x][grid_y].set_heap_index(0);
+    }
+  }
 }
 
 }  // namespace astar_planner_ros

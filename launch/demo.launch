@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<launch>
+  <param name="/use_sim_time" value="false" />
+
+  <node pkg="astar_planner_ros" type="astar_planner_test" name="astar_planner_test" output="screen"/>
+
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find astar_planner_ros)/map/map.yaml" />
+
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find astar_planner_ros)/launch/demo.rviz" />
+
+</launch>
