@@ -51,6 +51,20 @@ struct GridAStarResult {
   int path_cost = 0;
 };
 
+struct GridSearchPrimitives {
+  std::array<int, kNumOfGridSearchActions> dx;
+  std::array<int, kNumOfGridSearchActions> dy;
+  // the intermediate cells through which the actions go
+  // for all the horizontal moving actions, they go to direct neighbors, so
+  // initialize these intermediate cells to 0
+  std::array<int, kNumOfGridSearchActions> dx0intersects;
+  std::array<int, kNumOfGridSearchActions> dy0intersects;
+  std::array<int, kNumOfGridSearchActions> dx1intersects;
+  std::array<int, kNumOfGridSearchActions> dy1intersects;
+  // distances of transitions
+  std::array<int, kNumOfGridSearchActions> dxy_distance_mm;
+};
+
 class GridSearch {
  public:
   GridSearch(int max_grid_x, int max_grid_y, double xy_grid_resolution);
@@ -61,38 +75,34 @@ class GridSearch {
   int CheckDpMap(int grid_x, int grid_y);
 
  private:
-  int CalcHeuCost(int x1, int y1, int x2, int y2) const;
-  bool IsWithinMap(int x, int y) const;
-  bool IsValidCell(int x, int y) const;
-  int GetIndex(int x, int y) const;
+  bool SetStart(int start_x, int start_y);
+  bool SetEnd(int end_x, int end_y);
+  Node2d* GetNode(int grid_x, int grid_y);
+  int CalcHeuCost(int grid_x, int grid_y) const;
+  bool IsWithinMap(int grid_x, int grid_y) const;
+  bool IsValidCell(int grid_x, int grid_y) const;
+  int CalcGridXYIndex(int grid_x, int grid_y) const;
+  void UpdateSuccs(const Node2d& curr_node);
   void ComputeGridSearchActions();
   int GetActionCost(int curr_x, int curr_y, int action_id) const;
   void LoadGridAStarResult(GridAStarResult* result) const;
-  void ClearDpMap();
+  void Clear();
 
- private:
   int max_grid_x_ = 0;
   int max_grid_y_ = 0;
   double xy_grid_resolution_ = 0.0;
   const uint8_t* grid_map_ = nullptr;
   uint8_t obsthresh_;
-  Node2d* final_node_ = nullptr;
+  Node2d* start_node_ = nullptr;
+  Node2d* end_node_ = nullptr;
+  SearchType search_type_;
 
   std::vector<std::vector<Node2d>> dp_lookup_table_;
   std::unique_ptr<Heap> open_list_ = nullptr;
   std::vector<NodeStatus> closed_list_;
+  size_t iterations_ = 0;
 
-  int dx_[kNumOfGridSearchActions];
-  int dy_[kNumOfGridSearchActions];
-  // the intermediate cells through which the actions go
-  // for all the horizontal moving actions, they go to direct neighbors, so
-  // initialize these intermediate cells to 0
-  int dx0intersects_[kNumOfGridSearchActions];
-  int dy0intersects_[kNumOfGridSearchActions];
-  int dx1intersects_[kNumOfGridSearchActions];
-  int dy1intersects_[kNumOfGridSearchActions];
-  // distances of transitions
-  int dxy_distance_mm_[kNumOfGridSearchActions];
+  GridSearchPrimitives actions_;
 };
 
 }  // namespace astar_planner_ros
