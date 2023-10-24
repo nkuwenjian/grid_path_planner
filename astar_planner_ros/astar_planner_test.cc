@@ -31,8 +31,6 @@
  * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
-#include "astar_planner_ros/astar_planner.h"
-
 #include <memory>
 #include <mutex>  // NOLINT
 
@@ -43,6 +41,9 @@
 #include "nav_msgs/Path.h"
 #include "ros/ros.h"
 #include "tf/tf.h"
+
+#include "astar_planner_ros/common/utils.h"
+#include "astar_planner_ros/grid_search/grid_search.h"
 
 namespace astar_planner_ros {
 
@@ -62,10 +63,9 @@ class AStarPlannerTest {
       const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& start);
   void SetGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
   void MakePlan();
-  void PublishGlobalPlan(
-      const std::vector<geometry_msgs::PoseStamped>& plan) const;
+  static void PublishPlan(const std::vector<geometry_msgs::PoseStamped>& plan,
+                          const ros::Publisher& pub);
 
- private:
   ros::NodeHandle nh_;
   ros::Subscriber map_sub_;
   ros::Subscriber start_sub_;
@@ -78,8 +78,8 @@ class AStarPlannerTest {
   double origin_x_ = 0.0;
   double origin_y_ = 0.0;
   float resolution_ = 0.0;
-  std::vector<uint8_t> map_;
-  std::mutex map_mutex_;
+  std::vector<std::vector<uint8_t>> map_;
+  std::mutex mutex_;
 
   int start_x_ = 0;
   int start_y_ = 0;
@@ -90,7 +90,7 @@ class AStarPlannerTest {
   std::string global_frame_;
   ros::Publisher plan_pub_;
 
-  std::unique_ptr<GridSearch> planner_ = nullptr;
+  std::unique_ptr<grid_search::GridSearch> planner_ = nullptr;
 };
 
 AStarPlannerTest::AStarPlannerTest() {
@@ -103,24 +103,28 @@ AStarPlannerTest::AStarPlannerTest() {
 }
 
 void AStarPlannerTest::SetMap(const nav_msgs::OccupancyGrid::ConstPtr& map) {
-  std::lock_guard<std::mutex> lock(map_mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   size_x_ = map->info.width;
   size_y_ = map->info.height;
   resolution_ = map->info.resolution;
   origin_x_ = map->info.origin.position.x;
   origin_y_ = map->info.origin.position.y;
 
-  map_.clear();
-  map_.resize(map->data.size());
   // http://docs.ros.org/en/noetic/api/nav_msgs/html/msg/OccupancyGrid.html
   // The map data, in row-major order, starting with (0,0). Occupancy
   // probabilities are in the range[0, 100]. Unknown is - 1.
   // Here, we treat the unknown state as the occupied state.
-  for (size_t i = 0; i < map->data.size(); ++i) {
-    if (map->data[i] == kFree) {
-      map_[i] = kFree;
-    } else {
-      map_[i] = kOccupied;
+  map_.clear();
+  map_.resize(size_x_);
+  for (std::size_t i = 0U; i < size_x_; ++i) {
+    map_[i].resize(size_y_);
+    for (uint32_t j = 0U; j < size_y_; ++j) {
+      uint32_t index = i + j * size_x_;
+      if (map->data[index] == kFree) {
+        map_[i][j] = kFree;
+      } else {
+        map_[i][j] = kOccupied;
+      }
     }
   }
   LOG(INFO) << "Map is received.";
@@ -129,9 +133,9 @@ void AStarPlannerTest::SetMap(const nav_msgs::OccupancyGrid::ConstPtr& map) {
 void AStarPlannerTest::SetStart(
     const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& start) {
   int start_x =
-      CONTXY2DISC(start->pose.pose.position.x - origin_x_, resolution_);
+      common::ContXY2Disc(start->pose.pose.position.x - origin_x_, resolution_);
   int start_y =
-      CONTXY2DISC(start->pose.pose.position.y - origin_y_, resolution_);
+      common::ContXY2Disc(start->pose.pose.position.y - origin_y_, resolution_);
 
   if (start_x == start_x_ && start_y == start_y_) {
     return;
@@ -153,8 +157,10 @@ void AStarPlannerTest::SetStart(
 void AStarPlannerTest::SetGoal(
     const geometry_msgs::PoseStamped::ConstPtr& goal) {
   // retrieving goal position
-  int goal_x = CONTXY2DISC(goal->pose.position.x - origin_x_, resolution_);
-  int goal_y = CONTXY2DISC(goal->pose.position.y - origin_y_, resolution_);
+  int goal_x =
+      common::ContXY2Disc(goal->pose.position.x - origin_x_, resolution_);
+  int goal_y =
+      common::ContXY2Disc(goal->pose.position.y - origin_y_, resolution_);
 
   if (goal_x == goal_x_ && goal_y == goal_y_) {
     return;
@@ -178,20 +184,21 @@ void AStarPlannerTest::MakePlan() {
     return;
   }
 
-  std::lock_guard<std::mutex> lock(map_mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
   if (planner_ == nullptr || last_size_x_ != size_x_ ||
       last_size_y_ != size_y_) {
     planner_.reset();
-    planner_ = std::make_unique<GridSearch>(size_x_, size_y_, resolution_);
+    planner_ = std::make_unique<grid_search::GridSearch>(size_x_, size_y_,
+                                                         resolution_);
     last_size_x_ = size_x_;
     last_size_y_ = size_y_;
   }
 
-  GridAStarResult result;
-  if (!planner_->GenerateGridPath(start_x_, start_y_, goal_x_, goal_y_,
-                                  map_.data(), kOccupied, SearchType::A_STAR,
+  grid_search::GridAStarResult result;
+  if (!planner_->GenerateGridPath(start_x_, start_y_, goal_x_, goal_y_, map_,
+                                  kOccupied, grid_search::SearchType::A_STAR,
                                   &result)) {
-    LOG(INFO) << "A-star search failed.";
+    LOG(ERROR) << "A-star search failed.";
     return;
   }
   LOG(INFO) << "A-star search successfully.";
@@ -202,24 +209,29 @@ void AStarPlannerTest::MakePlan() {
   pose.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
 
   CHECK_EQ(result.x.size(), result.y.size());
+  const std::size_t N = result.x.size();
   std::vector<geometry_msgs::PoseStamped> plan;
-  for (size_t i = 0; i < result.x.size(); i++) {
-    pose.pose.position.x = DISCXY2CONT(result.x[i], resolution_) + origin_x_;
-    pose.pose.position.y = DISCXY2CONT(result.y[i], resolution_) + origin_y_;
+  for (std::size_t i = 0; i < N; i++) {
+    pose.pose.position.x =
+        common::DiscXY2Cont(result.x[i], resolution_) + origin_x_;
+    pose.pose.position.y =
+        common::DiscXY2Cont(result.y[i], resolution_) + origin_y_;
     plan.push_back(pose);
   }
-  PublishGlobalPlan(plan);
+  PublishPlan(plan, plan_pub_);
 }
 
-void AStarPlannerTest::PublishGlobalPlan(
-    const std::vector<geometry_msgs::PoseStamped>& plan) const {
-  CHECK(!plan.empty());
-  nav_msgs::Path gui_path;
-  gui_path.header.frame_id = plan.front().header.frame_id;
-  gui_path.header.stamp = ros::Time::now();
+void AStarPlannerTest::PublishPlan(
+    const std::vector<geometry_msgs::PoseStamped>& plan,
+    const ros::Publisher& pub) {
+  if (plan.empty()) {
+    return;
+  }
 
+  nav_msgs::Path gui_path;
+  gui_path.header = plan.front().header;
   gui_path.poses = plan;
-  plan_pub_.publish(gui_path);
+  pub.publish(gui_path);
 }
 
 }  // namespace astar_planner_ros

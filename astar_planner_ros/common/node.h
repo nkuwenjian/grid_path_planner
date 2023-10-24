@@ -33,47 +33,22 @@
 
 #pragma once
 
-#include "astar_planner_ros/node.h"
-#include "astar_planner_ros/utils.h"
-
 namespace astar_planner_ros {
+namespace common {
 
-class Node2d : public Node {
+enum class NodeStatus : int { OPEN, CLOSED };
+
+class Node {
  public:
-  Node2d() = default;
-  Node2d(const int grid_x, const int grid_y)
-      : grid_x_(grid_x), grid_y_(grid_y) {}
-  ~Node2d() override = default;
-  void set_g(const int g) {
-    g_ = g;
-    f_ = g_ + h_;
-  }
-  void set_h(const int h) {
-    h_ = h;
-    f_ = g_ + h_;
-  }
-  void set_f(const int f) { f_ = f; }
-  void set_pre_node(const Node2d* pre_node) { pre_node_ = pre_node; }
-  void set_iterations(const size_t iterations) { iterations_ = iterations; }
-  int grid_x() const { return grid_x_; }
-  int grid_y() const { return grid_y_; }
-  int g() const { return g_; }
-  int h() const { return h_; }
-  int f() const { return f_; }
-  size_t iterations() const { return iterations_; }
-  const Node2d* pre_node() const { return pre_node_; }
-  bool operator==(const Node2d& rhs) const {
-    return grid_x_ == rhs.grid_x_ && grid_y_ == rhs.grid_y_;
-  }
+  Node() = default;
+  virtual ~Node() = default;
 
- private:
-  int grid_x_ = 0;
-  int grid_y_ = 0;
-  int g_ = kInfiniteCost;
-  int h_ = 0;
-  int f_ = kInfiniteCost;
-  const Node2d* pre_node_ = nullptr;
-  size_t iterations_ = 0;
+  int heap_index() const { return heap_index_; }
+  void set_heap_index(const int heap_index) { heap_index_ = heap_index; }
+
+ protected:
+  int heap_index_ = 0;
 };
 
+}  // namespace common
 }  // namespace astar_planner_ros

@@ -34,19 +34,16 @@
 #pragma once
 
 namespace astar_planner_ros {
+namespace common {
 
-enum class NodeStatus { OPEN, CLOSED };
+inline double DiscXY2Cont(int X, double CELLSIZE) {
+  return X * CELLSIZE + CELLSIZE / 2.0;
+}
 
-class Node {
- public:
-  Node() = default;
-  virtual ~Node() = default;
+inline int ContXY2Disc(double X, double CELLSIZE) {
+  return X >= 0.0 ? static_cast<int>(X / CELLSIZE)
+                  : static_cast<int>(X / CELLSIZE) - 1;
+}
 
-  int heap_index() const { return heap_index_; }
-  void set_heap_index(const int heap_index) { heap_index_ = heap_index; }
-
- protected:
-  int heap_index_ = 0;
-};
-
+}  // namespace common
 }  // namespace astar_planner_ros

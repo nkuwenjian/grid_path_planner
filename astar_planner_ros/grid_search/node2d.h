@@ -33,11 +33,42 @@
 
 #pragma once
 
-#define CONTXY2DISC(X, CELLSIZE)                     \
-  (((X) >= 0) ? (static_cast<int>((X) / (CELLSIZE))) \
-              : (static_cast<int>((X) / (CELLSIZE)) - 1))
-#define DISCXY2CONT(X, CELLSIZE) ((X) * (CELLSIZE) + (CELLSIZE) / 2.0)
+#include "astar_planner_ros/common/constants.h"
+#include "astar_planner_ros/common/node.h"
 
 namespace astar_planner_ros {
-static constexpr int kInfiniteCost = 1000000000;
-}
+namespace grid_search {
+
+class Node2d : public common::Node {
+ public:
+  Node2d() = default;
+  Node2d(const int grid_x, const int grid_y)
+      : grid_x_(grid_x), grid_y_(grid_y) {}
+  ~Node2d() override = default;
+  void set_g(const int g) { g_ = g; }
+  void set_h(const int h) { h_ = h; }
+  void set_pre_node(const Node2d* pre_node) { pre_node_ = pre_node; }
+  void set_iterations(const std::size_t iterations) {
+    iterations_ = iterations;
+  }
+  int grid_x() const { return grid_x_; }
+  int grid_y() const { return grid_y_; }
+  int g() const { return g_; }
+  int h() const { return h_; }
+  std::size_t iterations() const { return iterations_; }
+  const Node2d* pre_node() const { return pre_node_; }
+  bool operator==(const Node2d& rhs) const {
+    return grid_x_ == rhs.grid_x_ && grid_y_ == rhs.grid_y_;
+  }
+
+ private:
+  int grid_x_ = 0;
+  int grid_y_ = 0;
+  int g_ = common::kInfiniteCost;
+  int h_ = 0;
+  const Node2d* pre_node_ = nullptr;
+  std::size_t iterations_ = 0U;
+};
+
+}  // namespace grid_search
+}  // namespace astar_planner_ros

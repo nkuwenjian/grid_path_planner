@@ -42,7 +42,7 @@
 #include "nav_core/base_global_planner.h"
 #include "ros/ros.h"
 
-#include "astar_planner_ros/astar_planner.h"
+#include "astar_planner_ros/grid_search/grid_search.h"
 
 namespace astar_planner_ros {
 
@@ -52,14 +52,6 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
    * @brief  Default constructor for the AStarPlannerROS object
    */
   AStarPlannerROS() = default;
-
-  /**
-   * @brief  Constructor for the AStarPlannerROS object
-   * @param  name The name of this planner
-   * @param  costmap_ros A pointer to the ROS wrapper of the costmap to use
-   */
-  AStarPlannerROS(const std::string& name,
-                  costmap_2d::Costmap2DROS* costmap_ros);
 
   /**
    * @brief  Initialization function for the AStarPlannerROS object
@@ -83,18 +75,40 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
   ~AStarPlannerROS() override = default;
 
  private:
+  bool UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros);
+
+  void GetRosParameters(const ros::NodeHandle& nh);
+
   uint8_t ComputeCircumscribedCost() const;
-  void PublishGlobalPlan(
-      const std::vector<geometry_msgs::PoseStamped>& plan) const;
 
- private:
-  std::unique_ptr<GridSearch> astar_planner_ = nullptr;
+  static void GetStartAndEndConfigurations(
+      const geometry_msgs::PoseStamped& start,
+      const geometry_msgs::PoseStamped& goal, double resolution,
+      double origin_x, double origin_y, int* start_x, int* start_y, int* end_x,
+      int* end_y);
+
+  static std::vector<std::vector<uint8_t>> GetGridMap(
+      const uint8_t* char_map, unsigned int size_x, unsigned int size_y,
+      bool treat_unknown_as_free);
+
+  static void PopulateGlobalPlan(const grid_search::GridAStarResult& result,
+                                 const std_msgs::Header& header,
+                                 double resolution, double origin_x,
+                                 double origin_y,
+                                 std::vector<geometry_msgs::PoseStamped>* plan);
+
+  static void PublishGlobalPlan(
+      const std::vector<geometry_msgs::PoseStamped>& plan,
+      const ros::Publisher& pub);
+
+  std::unique_ptr<grid_search::GridSearch> astar_planner_ = nullptr;
   bool initialized_ = false;
-
   std::string name_;
-  costmap_2d::Costmap2DROS* costmap_ros_ = nullptr;
+  const costmap_2d::Costmap2DROS* costmap_ros_ = nullptr;
+  const costmap_2d::Costmap2D* costmap_2d_ = nullptr;
+  costmap_2d::LayeredCostmap* layered_costmap_ = nullptr;
   unsigned char circumscribed_cost_;
-
+  bool treat_unknown_as_free_ = true;
   ros::Publisher plan_pub_;
 };
 

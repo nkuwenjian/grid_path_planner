@@ -31,7 +31,7 @@
  * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
-#include "astar_planner_ros/heap.h"
+#include "astar_planner_ros/common/heap.h"
 
 #include <algorithm>
 #include <sstream>
@@ -39,31 +39,28 @@
 #include "glog/logging.h"
 
 namespace astar_planner_ros {
+namespace common {
 
-namespace {
-constexpr size_t kInitHeapCapacity = 5000;
-}  // namespace
+Heap::Heap() { queue_.resize(capacity_); }
 
-Heap::Heap() : capacity_(kInitHeapCapacity) { queue_.resize(capacity_); }
-
-Heap::Heap(const size_t capacity) : capacity_(capacity) {
+Heap::Heap(const int capacity) : capacity_(capacity) {
   queue_.resize(capacity);
 }
 
 Heap::~Heap() { Clear(); }
 
 void Heap::Clear() {
-  for (size_t i = 1; i <= size_; ++i) {
+  for (int i = 1; i <= size_; ++i) {
     queue_[i].node->set_heap_index(0);
   }
   size_ = 0;
 }
 
-void Heap::PercolateDown(size_t hole, HeapElement obj) {
+void Heap::PercolateDown(int hole, HeapElement obj) {
   // Sanity checks.
   CHECK(!Empty());
 
-  size_t child;
+  int child;
   for (; 2 * hole <= size_; hole = child) {
     child = 2 * hole;
     if (child != size_ && queue_[child + 1].key < queue_[child].key) {
@@ -80,7 +77,7 @@ void Heap::PercolateDown(size_t hole, HeapElement obj) {
   queue_[hole].node->set_heap_index(hole);
 }
 
-void Heap::PercolateUp(size_t hole, HeapElement obj) {
+void Heap::PercolateUp(int hole, HeapElement obj) {
   // Sanity checks.
   CHECK(!Empty());
 
@@ -92,7 +89,7 @@ void Heap::PercolateUp(size_t hole, HeapElement obj) {
   queue_[hole].node->set_heap_index(hole);
 }
 
-void Heap::PercolateUpOrDown(size_t hole, HeapElement obj) {
+void Heap::PercolateUpOrDown(int hole, HeapElement obj) {
   // Sanity checks.
   CHECK(!Empty());
 
@@ -117,6 +114,7 @@ void Heap::Insert(Node* node, int key) {
     LOG(ERROR) << "The node is already in the heap";
     return;
   }
+
   if (size_ + 1 == capacity_) {
     Allocate();
   }
@@ -157,4 +155,5 @@ void Heap::Update(Node* node, int new_key) {
   }
 }
 
+}  // namespace common
 }  // namespace astar_planner_ros
