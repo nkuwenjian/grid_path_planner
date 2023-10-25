@@ -74,9 +74,11 @@ void AStarPlannerROS::initialize(std::string name,
     return;
   }
 
-  astar_planner_ = std::make_unique<grid_search::GridSearch>(
-      costmap_2d_->getSizeInCellsX(), costmap_2d_->getSizeInCellsY(),
-      costmap_2d_->getResolution());
+  astar_planner_ = std::make_unique<grid_search::GridSearch>();
+  astar_planner_->Init(static_cast<int>(costmap_2d_->getSizeInCellsX()),
+                       static_cast<int>(costmap_2d_->getSizeInCellsY()),
+                       costmap_2d_->getResolution(), circumscribed_cost_,
+                       grid_search::SearchType::A_STAR);
 
   plan_pub_ = private_nh.advertise<nav_msgs::Path>("grid_path", 1);
 
@@ -209,9 +211,8 @@ bool AStarPlannerROS::makePlan(const geometry_msgs::PoseStamped& start,
 
   // Search path via A-star algorithm.
   grid_search::GridAStarResult result;
-  if (!astar_planner_->GenerateGridPath(
-          start_x, start_y, end_x, end_y, grid_map, circumscribed_cost_,
-          grid_search::SearchType::A_STAR, &result)) {
+  if (!astar_planner_->GenerateGridPath(start_x, start_y, end_x, end_y,
+                                        grid_map, &result)) {
     LOG(ERROR) << "Failed to find a grid path.";
     return false;
   }

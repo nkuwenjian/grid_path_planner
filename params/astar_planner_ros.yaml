@@ -1,0 +1,2 @@
+AStarPlannerROS:
+  treat_unknown_as_free: true

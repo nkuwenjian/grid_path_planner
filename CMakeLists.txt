@@ -49,8 +49,8 @@ include_directories(
 add_library(grid_search astar_planner_ros/grid_search/grid_search.cc astar_planner_ros/common/heap.cc)
 target_link_libraries(grid_search glog::glog)
 
-add_executable(astar_planner_test astar_planner_ros/astar_planner_test.cc)
-target_link_libraries(astar_planner_test grid_search ${catkin_LIBRARIES})
-
 add_library(astar_planner_ros astar_planner_ros/astar_planner_ros.cc)
 target_link_libraries(astar_planner_ros grid_search ${catkin_LIBRARIES})
+
+add_executable(astar_planner_ros_test astar_planner_ros/astar_planner_ros_test.cc)
+target_link_libraries(astar_planner_ros_test astar_planner_ros ${catkin_LIBRARIES})
