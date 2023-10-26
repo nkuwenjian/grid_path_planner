@@ -52,17 +52,19 @@ namespace astar_planner_ros {
 class AStarPlannerROSTest {
  public:
   explicit AStarPlannerROSTest(tf2_ros::Buffer& tf);  // NOLINT
-  virtual ~AStarPlannerROSTest() = default;
+  virtual ~AStarPlannerROSTest();
 
   void Initialize();
 
  private:
+  void GetRosParameters(const ros::NodeHandle& nh,
+                        double* transform_publish_period);
   void SetStart(
       const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& start);
   void SetGoal(const geometry_msgs::PoseStamped::ConstPtr& goal);
   void MakePlan();
   void PublishTransform();
-  void PublishLoop();
+  void PublishLoop(double transform_publish_period);
 
   ros::NodeHandle nh_;
   ros::Subscriber start_sub_;
@@ -84,6 +86,8 @@ class AStarPlannerROSTest {
 
 AStarPlannerROSTest::AStarPlannerROSTest(tf2_ros::Buffer& tf) : tf_(tf) {}
 
+AStarPlannerROSTest::~AStarPlannerROSTest() { transform_thread_->join(); }
+
 void AStarPlannerROSTest::Initialize() {
   start_sub_ =
       nh_.subscribe("initialpose", 1, &AStarPlannerROSTest::SetStart, this);
@@ -92,10 +96,18 @@ void AStarPlannerROSTest::Initialize() {
 
   tf_broadcaster_ = std::make_unique<tf::TransformBroadcaster>();
 
+  // Retrieve parameters
+  ros::NodeHandle private_nh("~");
+  double transform_publish_period;
+  GetRosParameters(private_nh, &transform_publish_period);
+
   // Create a thread to periodically publish the latest map->base_link
   // transform; it needs to go out regularly, uninterrupted by potentially
   // long periods of computation in our main loop.
-  transform_thread_ = std::make_unique<std::thread>([this] { PublishLoop(); });
+  transform_thread_ =
+      std::make_unique<std::thread>([this, transform_publish_period] {
+        PublishLoop(transform_publish_period);
+      });
 
   costmap_ros_ =
       std::make_unique<costmap_2d::Costmap2DROS>("global_costmap", tf_);
@@ -105,6 +117,13 @@ void AStarPlannerROSTest::Initialize() {
 
   // Start actively updating costmaps based on sensor data.
   costmap_ros_->start();
+}
+
+void AStarPlannerROSTest::GetRosParameters(const ros::NodeHandle& nh,
+                                           double* transform_publish_period) {
+  nh.param("transform_publish_period", *transform_publish_period, 0.05);
+  VLOG(4) << std::fixed
+          << "transform_publish_period: " << *transform_publish_period;
 }
 
 void AStarPlannerROSTest::PublishTransform() {
@@ -124,9 +143,12 @@ void AStarPlannerROSTest::PublishTransform() {
       map_to_base_link, tf_expiration, "map", "base_link"));
 }
 
-void AStarPlannerROSTest::PublishLoop() {
-  static constexpr double kTransformPublishPeriod = 0.05;
-  ros::Rate r(1.0 / kTransformPublishPeriod);
+void AStarPlannerROSTest::PublishLoop(double transform_publish_period) {
+  if (transform_publish_period <= 0.0) {
+    return;
+  }
+
+  ros::Rate r(1.0 / transform_publish_period);
   while (ros::ok()) {
     PublishTransform();
     r.sleep();
