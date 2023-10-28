@@ -77,7 +77,7 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
  private:
   bool UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros);
 
-  void GetRosParameters(const ros::NodeHandle& nh);
+  void LoadRosParamFromNodeHandle(const ros::NodeHandle& nh);
 
   uint8_t ComputeCircumscribedCost() const;
 

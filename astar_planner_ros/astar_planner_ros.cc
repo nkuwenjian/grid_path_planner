@@ -64,7 +64,7 @@ void AStarPlannerROS::initialize(std::string name,
   ros::NodeHandle private_nh("~/" + name);
   VLOG(4) << "Name is " << name;
   name_ = name;
-  GetRosParameters(private_nh);
+  LoadRosParamFromNodeHandle(private_nh);
 
   circumscribed_cost_ = ComputeCircumscribedCost();
   if (circumscribed_cost_ == 0U) {
@@ -102,7 +102,7 @@ bool AStarPlannerROS::UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros) {
   return true;
 }
 
-void AStarPlannerROS::GetRosParameters(const ros::NodeHandle& nh) {
+void AStarPlannerROS::LoadRosParamFromNodeHandle(const ros::NodeHandle& nh) {
   // Sanity checks.
   CHECK_NOTNULL(costmap_2d_);
 
