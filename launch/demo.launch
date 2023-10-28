@@ -17,6 +17,9 @@
     <rosparam file="$(find astar_planner_ros)/params/astar_planner_ros.yaml" command="load" />
   </node>
 
+  <!-- tf -->
+  <node pkg="astar_planner_ros" type="astar_planner_tf_broadcaster" name="astar_planner_tf_broadcaster" output="screen"/>
+
   <!-- Mapping -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
     <param name="frame_id" value="$(arg global_frame)" />

@@ -54,3 +54,6 @@ target_link_libraries(astar_planner_ros grid_search ${catkin_LIBRARIES})
 
 add_executable(astar_planner_ros_test astar_planner_ros/astar_planner_ros_test.cc)
 target_link_libraries(astar_planner_ros_test astar_planner_ros ${catkin_LIBRARIES})
+
+add_executable(astar_planner_tf_broadcaster astar_planner_ros/tf_broadcaster.cc)
+target_link_libraries(astar_planner_tf_broadcaster ${catkin_LIBRARIES} glog::glog)
