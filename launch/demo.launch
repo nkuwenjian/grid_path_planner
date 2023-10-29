@@ -5,7 +5,7 @@
 
   <arg name="global_frame" value="map" />
 
-  <arg name="map_file" default="$(find astar_planner_ros)/map/map.yaml" />
+  <arg name="map_file" default="$(find astar_planner_ros)/map/maze_5cm/map.yaml" />
 
   <node pkg="astar_planner_ros" type="astar_planner_ros_test" name="astar_planner_ros_test" output="screen">
     <!-- global_costmap -->
