@@ -49,11 +49,11 @@ struct HeapElement {
 class Heap {
  public:
   Heap();
-  explicit Heap(int capacity);
+  explicit Heap(std::size_t capacity);
   virtual ~Heap();
 
   bool Empty() const { return size_ == 0; }
-  int Size() const { return size_; }
+  std::size_t Size() const { return size_; }
   void Clear();
   void Insert(Node* node, int key);
   void Update(Node* node, int new_key);
@@ -61,13 +61,13 @@ class Heap {
   Node* Pop();
 
  private:
-  void PercolateUp(int hole, HeapElement obj);
-  void PercolateDown(int hole, HeapElement obj);
-  void PercolateUpOrDown(int hole, HeapElement obj);
+  void PercolateUp(std::size_t hole, HeapElement obj);
+  void PercolateDown(std::size_t hole, HeapElement obj);
+  void PercolateUpOrDown(std::size_t hole, HeapElement obj);
   void Allocate();
 
-  int size_ = 0;
-  int capacity_ = kInitHeapCapacity;
+  std::size_t size_ = 0;
+  std::size_t capacity_ = kInitHeapCapacity;
   std::vector<HeapElement> queue_;
 };
 

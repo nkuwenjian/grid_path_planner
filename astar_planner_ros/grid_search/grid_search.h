@@ -42,7 +42,7 @@
 namespace astar_planner_ros {
 namespace grid_search {
 
-enum class SearchType : int { A_STAR, DP };
+enum class SearchType { A_STAR, DP };
 
 struct GridAStarResult {
   std::vector<int> x;
