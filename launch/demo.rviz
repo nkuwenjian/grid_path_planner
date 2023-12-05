@@ -57,7 +57,7 @@ Visualization Manager:
       Draw Behind: false
       Enabled: true
       Name: Map
-      Topic: /astar_planner_ros_test/global_costmap/costmap
+      Topic: /grid_path_planner_test/global_costmap/costmap
       Unreliable: false
       Use Timestamp: false
       Value: true
@@ -82,7 +82,7 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /astar_planner_ros_test/AStarPlannerROS/grid_path
+      Topic: /grid_path_planner_test/GridPathPlannerROS/grid_path
       Unreliable: false
       Value: true
   Enabled: true

@@ -36,13 +36,11 @@
 #include <memory>
 #include <vector>
 
-#include "astar_planner_ros/common/heap.h"
-#include "astar_planner_ros/grid_search/node2d.h"
+#include "grid_path_planner/common/heap.h"
+#include "grid_path_planner/grid_search/node2d.h"
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 namespace grid_search {
-
-enum class SearchType { A_STAR, DP };
 
 struct GridAStarResult {
   std::vector<int> x;
@@ -66,8 +64,11 @@ struct GridSearchPrimitives {
 
 class GridSearch {
  public:
+  enum class SearchType { A_STAR, DP };
+
   GridSearch() = default;
   virtual ~GridSearch();
+
   void Init(int max_grid_x, int max_grid_y, double xy_grid_resolution,
             uint8_t obsthresh, SearchType search_type);
   bool GenerateGridPath(int sx, int sy, int ex, int ey,
@@ -103,7 +104,7 @@ class GridSearch {
 
   std::vector<std::vector<Node2d>> dp_lookup_table_;
   std::unique_ptr<common::Heap> open_list_ = nullptr;
-  std::vector<common::NodeStatus> closed_list_;
+  std::vector<common::Node::NodeStatus> closed_list_;
   std::size_t iterations_ = 0U;
 
   GridSearchPrimitives actions_;
@@ -111,4 +112,4 @@ class GridSearch {
 };
 
 }  // namespace grid_search
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

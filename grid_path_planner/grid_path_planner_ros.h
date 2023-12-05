@@ -42,19 +42,19 @@
 #include "nav_core/base_global_planner.h"
 #include "ros/ros.h"
 
-#include "astar_planner_ros/grid_search/grid_search.h"
+#include "grid_path_planner/grid_search/grid_search.h"
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 
-class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
+class GridPathPlannerROS : public nav_core::BaseGlobalPlanner {
  public:
   /**
-   * @brief  Default constructor for the AStarPlannerROS object
+   * @brief  Default constructor for the GridPathPlannerROS object
    */
-  AStarPlannerROS() = default;
+  GridPathPlannerROS() = default;
 
   /**
-   * @brief  Initialization function for the AStarPlannerROS object
+   * @brief  Initialization function for the GridPathPlannerROS object
    * @param  name The name of this planner
    * @param  costmap_ros A pointer to the ROS wrapper of the costmap to use
    */
@@ -72,7 +72,7 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
                 const geometry_msgs::PoseStamped& goal,
                 std::vector<geometry_msgs::PoseStamped>& plan) override;
 
-  ~AStarPlannerROS() override = default;
+  ~GridPathPlannerROS() override = default;
 
  private:
   bool UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros);
@@ -101,7 +101,7 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
       const std::vector<geometry_msgs::PoseStamped>& plan,
       const ros::Publisher& pub);
 
-  std::unique_ptr<grid_search::GridSearch> astar_planner_ = nullptr;
+  std::unique_ptr<grid_search::GridSearch> grid_path_planner_ = nullptr;
   bool initialized_ = false;
   std::string name_;
   const costmap_2d::Costmap2DROS* costmap_ros_ = nullptr;
@@ -112,4 +112,4 @@ class AStarPlannerROS : public nav_core::BaseGlobalPlanner {
   ros::Publisher plan_pub_;
 };
 
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

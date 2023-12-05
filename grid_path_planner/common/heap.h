@@ -35,10 +35,10 @@
 
 #include <vector>
 
-#include "astar_planner_ros/common/constants.h"
-#include "astar_planner_ros/common/node.h"
+#include "grid_path_planner/common/constants.h"
+#include "grid_path_planner/common/node.h"
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 namespace common {
 
 struct HeapElement {
@@ -72,4 +72,4 @@ class Heap {
 };
 
 }  // namespace common
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

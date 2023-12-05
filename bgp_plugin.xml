@@ -1,7 +1,7 @@
-<library path="lib/libastar_planner_ros">
-  <class name="astar_planner_ros/AStarPlannerROS" type="astar_planner_ros::AStarPlannerROS" base_class_type="nav_core::BaseGlobalPlanner">
+<library path="lib/libgrid_path_planner">
+  <class name="grid_path_planner/GridPathPlannerROS" type="grid_path_planner::GridPathPlannerROS" base_class_type="nav_core::BaseGlobalPlanner">
     <description>
-      An implementation of grid-based A-star planner.
+      An implementation of grid-based path planner.
     </description>
   </class>
 </library>

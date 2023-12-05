@@ -33,13 +33,13 @@
 
 #pragma once
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 namespace common {
-
-enum class NodeStatus { OPEN, CLOSED };
 
 class Node {
  public:
+  enum class NodeStatus { OPEN, CLOSED };
+
   Node() = default;
   virtual ~Node() = default;
 
@@ -53,4 +53,4 @@ class Node {
 };
 
 }  // namespace common
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

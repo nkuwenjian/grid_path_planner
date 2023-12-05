@@ -5,20 +5,20 @@
 
   <arg name="global_frame" value="map" />
 
-  <arg name="map_file" default="$(find astar_planner_ros)/map/maze_5cm/map.yaml" />
+  <arg name="map_file" default="$(find grid_path_planner)/map/maze_5cm/map.yaml" />
 
-  <node pkg="astar_planner_ros" type="astar_planner_ros_test" name="astar_planner_ros_test" output="screen">
+  <node pkg="grid_path_planner" type="grid_path_planner_test" name="grid_path_planner_test" output="screen">
     <!-- global_costmap -->
-    <rosparam file="$(find astar_planner_ros)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find astar_planner_ros)/params/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find grid_path_planner)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find grid_path_planner)/params/global_costmap_params.yaml" command="load" />
     <param name="global_costmap/global_frame" value="$(arg global_frame)" />
 
-    <!-- AStarPlannerROS -->
-    <rosparam file="$(find astar_planner_ros)/params/astar_planner_ros.yaml" command="load" />
+    <!-- GridPathPlannerROS -->
+    <rosparam file="$(find grid_path_planner)/params/grid_path_planner_ros.yaml" command="load" />
   </node>
 
   <!-- tf -->
-  <node pkg="astar_planner_ros" type="astar_planner_tf_broadcaster" name="astar_planner_tf_broadcaster" output="screen"/>
+  <node pkg="grid_path_planner" type="grid_path_planner_tf_broadcaster" name="grid_path_planner_tf_broadcaster" output="screen"/>
 
   <!-- Mapping -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)">
@@ -26,6 +26,6 @@
   </node>
 
   <!-- Visualization -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find astar_planner_ros)/launch/demo.rviz" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find grid_path_planner)/launch/demo.rviz" />
 
 </launch>

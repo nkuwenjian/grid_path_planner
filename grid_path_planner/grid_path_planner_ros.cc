@@ -31,7 +31,7 @@
  * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
-#include "astar_planner_ros/astar_planner_ros.h"
+#include "grid_path_planner/grid_path_planner_ros.h"
 
 #include "costmap_2d/cost_values.h"
 #include "costmap_2d/inflation_layer.h"
@@ -40,18 +40,18 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "tf/tf.h"
 
-#include "astar_planner_ros/common/utils.h"
+#include "grid_path_planner/common/utils.h"
 
-PLUGINLIB_EXPORT_CLASS(astar_planner_ros::AStarPlannerROS,
+PLUGINLIB_EXPORT_CLASS(grid_path_planner::GridPathPlannerROS,
                        nav_core::BaseGlobalPlanner)
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 
-void AStarPlannerROS::initialize(std::string name,
-                                 costmap_2d::Costmap2DROS* costmap_ros) {
-  // Check if AStarPlannerROS has been initialized.
+void GridPathPlannerROS::initialize(std::string name,
+                                    costmap_2d::Costmap2DROS* costmap_ros) {
+  // Check if GridPathPlannerROS has been initialized.
   if (initialized_) {
-    LOG(INFO) << "AStarPlannerROS has been initialized.";
+    LOG(INFO) << "GridPathPlannerROS has been initialized.";
     return;
   }
 
@@ -74,19 +74,19 @@ void AStarPlannerROS::initialize(std::string name,
     return;
   }
 
-  astar_planner_ = std::make_unique<grid_search::GridSearch>();
-  astar_planner_->Init(static_cast<int>(costmap_2d_->getSizeInCellsX()),
-                       static_cast<int>(costmap_2d_->getSizeInCellsY()),
-                       costmap_2d_->getResolution(), circumscribed_cost_,
-                       grid_search::SearchType::A_STAR);
+  grid_path_planner_ = std::make_unique<grid_search::GridSearch>();
+  grid_path_planner_->Init(static_cast<int>(costmap_2d_->getSizeInCellsX()),
+                           static_cast<int>(costmap_2d_->getSizeInCellsY()),
+                           costmap_2d_->getResolution(), circumscribed_cost_,
+                           grid_search::GridSearch::SearchType::A_STAR);
 
   plan_pub_ = private_nh.advertise<nav_msgs::Path>("grid_path", 1);
 
   initialized_ = true;
-  LOG(INFO) << "AStarPlannerROS is initialized successfully.";
+  LOG(INFO) << "GridPathPlannerROS is initialized successfully.";
 }
 
-bool AStarPlannerROS::UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros) {
+bool GridPathPlannerROS::UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros) {
   if (costmap_ros == nullptr) {
     LOG(ERROR) << "costmap_ros == nullptr";
     return false;
@@ -102,7 +102,7 @@ bool AStarPlannerROS::UpdateCostmap(costmap_2d::Costmap2DROS* costmap_ros) {
   return true;
 }
 
-void AStarPlannerROS::LoadRosParamFromNodeHandle(const ros::NodeHandle& nh) {
+void GridPathPlannerROS::LoadRosParamFromNodeHandle(const ros::NodeHandle& nh) {
   // Sanity checks.
   CHECK_NOTNULL(costmap_2d_);
 
@@ -111,7 +111,7 @@ void AStarPlannerROS::LoadRosParamFromNodeHandle(const ros::NodeHandle& nh) {
           << "treat_unknown_as_free: " << treat_unknown_as_free_;
 }
 
-uint8_t AStarPlannerROS::ComputeCircumscribedCost() const {
+uint8_t GridPathPlannerROS::ComputeCircumscribedCost() const {
   // Sanity checks.
   CHECK_NOTNULL(layered_costmap_);
   CHECK_NOTNULL(costmap_2d_);
@@ -136,7 +136,7 @@ uint8_t AStarPlannerROS::ComputeCircumscribedCost() const {
   return 0U;
 }
 
-void AStarPlannerROS::GetStartAndEndConfigurations(
+void GridPathPlannerROS::GetStartAndEndConfigurations(
     const geometry_msgs::PoseStamped& start,
     const geometry_msgs::PoseStamped& goal, double resolution, double origin_x,
     double origin_y, int* start_x, int* start_y, int* end_x, int* end_y) {
@@ -160,7 +160,7 @@ void AStarPlannerROS::GetStartAndEndConfigurations(
   *end_y = common::ContXY2Disc(goal.pose.position.y - origin_y, resolution);
 }
 
-std::vector<std::vector<uint8_t>> AStarPlannerROS::GetGridMap(
+std::vector<std::vector<uint8_t>> GridPathPlannerROS::GetGridMap(
     const uint8_t* char_map, unsigned int size_x, unsigned int size_y,
     bool treat_unknown_as_free) {
   if (char_map == nullptr) {
@@ -182,12 +182,13 @@ std::vector<std::vector<uint8_t>> AStarPlannerROS::GetGridMap(
   return grid_map;
 }
 
-bool AStarPlannerROS::makePlan(const geometry_msgs::PoseStamped& start,
-                               const geometry_msgs::PoseStamped& goal,
-                               std::vector<geometry_msgs::PoseStamped>& plan) {
-  // Check if AStarPlannerROS has been initialized.
+bool GridPathPlannerROS::makePlan(
+    const geometry_msgs::PoseStamped& start,
+    const geometry_msgs::PoseStamped& goal,
+    std::vector<geometry_msgs::PoseStamped>& plan) {
+  // Check if GridPathPlannerROS has been initialized.
   if (!initialized_) {
-    LOG(ERROR) << "AStarPlannerROS has not been initialized.";
+    LOG(ERROR) << "GridPathPlannerROS has not been initialized.";
     return false;
   }
 
@@ -211,8 +212,8 @@ bool AStarPlannerROS::makePlan(const geometry_msgs::PoseStamped& start,
 
   // Search path via A-star algorithm.
   grid_search::GridAStarResult result;
-  if (!astar_planner_->GenerateGridPath(start_x, start_y, end_x, end_y,
-                                        grid_map, &result)) {
+  if (!grid_path_planner_->GenerateGridPath(start_x, start_y, end_x, end_y,
+                                            grid_map, &result)) {
     LOG(ERROR) << "Failed to find a grid path.";
     return false;
   }
@@ -228,7 +229,7 @@ bool AStarPlannerROS::makePlan(const geometry_msgs::PoseStamped& start,
   return true;
 }
 
-void AStarPlannerROS::PopulateGlobalPlan(
+void GridPathPlannerROS::PopulateGlobalPlan(
     const grid_search::GridAStarResult& result, const std_msgs::Header& header,
     double resolution, double origin_x, double origin_y,
     std::vector<geometry_msgs::PoseStamped>* plan) {
@@ -250,7 +251,7 @@ void AStarPlannerROS::PopulateGlobalPlan(
   }
 }
 
-void AStarPlannerROS::PublishGlobalPlan(
+void GridPathPlannerROS::PublishGlobalPlan(
     const std::vector<geometry_msgs::PoseStamped>& plan,
     const ros::Publisher& pub) {
   if (plan.empty()) {
@@ -263,4 +264,4 @@ void AStarPlannerROS::PublishGlobalPlan(
   pub.publish(gui_path);
 }
 
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

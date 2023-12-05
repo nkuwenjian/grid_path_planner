@@ -31,14 +31,14 @@
  * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
-#include "astar_planner_ros/common/heap.h"
+#include "grid_path_planner/common/heap.h"
 
 #include <algorithm>
 #include <sstream>
 
 #include "glog/logging.h"
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 namespace common {
 
 Heap::Heap() { queue_.resize(capacity_); }
@@ -156,4 +156,4 @@ void Heap::Update(Node* node, int new_key) {
 }
 
 }  // namespace common
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

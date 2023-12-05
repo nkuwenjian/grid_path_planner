@@ -29,8 +29,8 @@ IncludeCategories:
   # Protobuf Files
   - Regex:       '\.pb\.h'
     Priority:    6
-  # A-star ros planner libs
-  - Regex:       '^"(astar_planner_ros)'
+  # Grid path planner libs
+  - Regex:       '^"(grid_path_planner)'
     Priority:    7
   # The rest
   - Regex:       '.*'

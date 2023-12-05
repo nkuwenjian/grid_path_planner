@@ -33,17 +33,15 @@
 
 #pragma once
 
-namespace astar_planner_ros {
+#include <limits>
+
+namespace grid_path_planner {
 namespace common {
 
-inline double DiscXY2Cont(int X, double CELLSIZE) {
-  return X * CELLSIZE + CELLSIZE / 2.0;
-}
-
-inline int ContXY2Disc(double X, double CELLSIZE) {
-  return X >= 0.0 ? static_cast<int>(X / CELLSIZE)
-                  : static_cast<int>(X / CELLSIZE) - 1;
-}
+static constexpr int kInfiniteCost = std::numeric_limits<int>::max();
+static constexpr int kPhiGridResolution = 16;
+static constexpr int kNumOfGridSearchActions = 16;
+static constexpr std::size_t kInitHeapCapacity = 5000;
 
 }  // namespace common
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner

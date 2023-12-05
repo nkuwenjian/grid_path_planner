@@ -31,7 +31,7 @@
  * Author: Jian Wen (nkuwenjian@gmail.com)
  *****************************************************************************/
 
-#include "astar_planner_ros/astar_planner_ros.h"
+#include "grid_path_planner/grid_path_planner_ros.h"
 
 #include <memory>
 #include <mutex>  // NOLINT
@@ -45,12 +45,12 @@
 #include "tf/tf.h"
 #include "tf2_ros/transform_listener.h"
 
-namespace astar_planner_ros {
+namespace grid_path_planner {
 
-class AStarPlannerROSTest {
+class GridPathPlannerROSTest {
  public:
-  explicit AStarPlannerROSTest(tf2_ros::Buffer& tf);  // NOLINT
-  virtual ~AStarPlannerROSTest() = default;
+  explicit GridPathPlannerROSTest(tf2_ros::Buffer& tf);  // NOLINT
+  virtual ~GridPathPlannerROSTest() = default;
 
   void Initialize();
 
@@ -72,29 +72,29 @@ class AStarPlannerROSTest {
   std::mutex start_mutex_;
   std::mutex goal_mutex_;
 
-  std::unique_ptr<AStarPlannerROS> planner_ = nullptr;
+  std::unique_ptr<GridPathPlannerROS> planner_ = nullptr;
   std::unique_ptr<costmap_2d::Costmap2DROS> costmap_ros_ = nullptr;
 };
 
-AStarPlannerROSTest::AStarPlannerROSTest(tf2_ros::Buffer& tf) : tf_(tf) {}
+GridPathPlannerROSTest::GridPathPlannerROSTest(tf2_ros::Buffer& tf) : tf_(tf) {}
 
-void AStarPlannerROSTest::Initialize() {
+void GridPathPlannerROSTest::Initialize() {
   start_sub_ =
-      nh_.subscribe("initialpose", 1, &AStarPlannerROSTest::SetStart, this);
+      nh_.subscribe("initialpose", 1, &GridPathPlannerROSTest::SetStart, this);
   goal_sub_ = nh_.subscribe("move_base_simple/goal", 1,
-                            &AStarPlannerROSTest::SetGoal, this);
+                            &GridPathPlannerROSTest::SetGoal, this);
 
   costmap_ros_ =
       std::make_unique<costmap_2d::Costmap2DROS>("global_costmap", tf_);
   costmap_ros_->pause();
-  planner_ = std::make_unique<AStarPlannerROS>();
-  planner_->initialize("AStarPlannerROS", costmap_ros_.get());
+  planner_ = std::make_unique<GridPathPlannerROS>();
+  planner_->initialize("GridPathPlannerROS", costmap_ros_.get());
 
   // Start actively updating costmaps based on sensor data.
   costmap_ros_->start();
 }
 
-void AStarPlannerROSTest::SetStart(
+void GridPathPlannerROSTest::SetStart(
     const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& start) {
   {
     std::lock_guard<std::mutex> start_lock(start_mutex_);
@@ -107,7 +107,7 @@ void AStarPlannerROSTest::SetStart(
   MakePlan();
 }
 
-void AStarPlannerROSTest::SetGoal(
+void GridPathPlannerROSTest::SetGoal(
     const geometry_msgs::PoseStamped::ConstPtr& goal) {
   {
     std::lock_guard<std::mutex> goal_lock(goal_mutex_);
@@ -119,7 +119,7 @@ void AStarPlannerROSTest::SetGoal(
   MakePlan();
 }
 
-void AStarPlannerROSTest::MakePlan() {
+void GridPathPlannerROSTest::MakePlan() {
   std::lock_guard<std::mutex> start_lock(start_mutex_);
   std::lock_guard<std::mutex> goal_lock(goal_mutex_);
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> map_lock(
@@ -137,18 +137,18 @@ void AStarPlannerROSTest::MakePlan() {
   }
 }
 
-}  // namespace astar_planner_ros
+}  // namespace grid_path_planner
 
 int main(int argc, char* argv[]) {
-  ros::init(argc, argv, "astar_planner_ros_test");
+  ros::init(argc, argv, "grid_path_planner_test");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
   tf2_ros::Buffer buffer(ros::Duration(10));
   tf2_ros::TransformListener tf(buffer);
 
-  astar_planner_ros::AStarPlannerROSTest astar_planner_ros_test(buffer);
-  astar_planner_ros_test.Initialize();
+  grid_path_planner::GridPathPlannerROSTest grid_path_planner_test(buffer);
+  grid_path_planner_test.Initialize();
   ros::spin();
 
   return 0;
